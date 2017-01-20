@@ -51,7 +51,7 @@ example_zookeeper_1         /docker-entrypoint.sh zkSe ...   Up       0.0.0.0:21
 
 
 ###Gotcha
-The python kafka client will not get the updated list immediately of brokers as the kafka clients are scaling up. The update rate of the broker list depends on the metadata refresh interval {{metadata.max.age.ms}} or {{topic.metadata.refresh.interval.ms}}.
+The python kafka client will not get the updated list immediately of brokers as the kafka clients are scaling up. The update rate of the broker list depends on the metadata refresh interval `metadata.max.age.ms` or `topic.metadata.refresh.interval.ms`.
 So if we kill the master kafka container that was instantiated in the beginning before the metadata refresh interval, from the instantiation time, then the producer and consumer will fail.
 
 Check the configuration properties: https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md
