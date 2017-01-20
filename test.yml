@@ -1,0 +1,51 @@
+---
+version: '2'
+services:
+  zookeeper:
+    image: zookeeper:3.4.9
+    ports:
+      - 2181:2181
+#    expose:
+#      - 2181
+  kafka:
+    image: wurstmeister/kafka:0.10.1.0
+    ports:
+      - 9092
+    expose:
+      - 9092
+    links:
+      - zookeeper
+    environment:
+      KAFKA_CREATE_TOPICS: "time:1:1"
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_PORT: 9092
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  librdkafka-base:
+    build:
+      context: ./base
+      dockerfile: Dockerfile
+    image: librdkafka-base:test
+
+  consumer:
+    build:
+      context: ./consumer
+      dockerfile: Dockerfile
+    image: consumer:test
+    links:
+      - kafka
+    environment:
+      KAFKA_BROKERS: kafka
+      KAFKA_TOPICS: "time"
+
+  producer:
+    build:
+      context: ./producer
+      dockerfile: Dockerfile
+    image: producer:test
+    links:
+      - kafka
+    environment:
+      KAFKA_BROKERS: kafka
+      KAFKA_TOPIC: "time"
