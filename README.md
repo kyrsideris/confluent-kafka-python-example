@@ -51,7 +51,8 @@ example_zookeeper_1         /docker-entrypoint.sh zkSe ...   Up       0.0.0.0:21
 
 
 ###Gotcha
-The python kafka client will not get the updated list of brokers as the kafka clients are scaling up. Zookeeper seems to have the update list of kafka clients. So if we kill the master kafka container that was instantiated in the beginning then the producer and consumer will fail.
+The python kafka client will not get the updated list immediately of brokers as the kafka clients are scaling up. The update rate of the broker list depends on the {{metadata.max.age.ms}} period on 0.10 and {{topic.metadata.refresh.interval.ms}} on 0.8.
+So if we kill the master kafka container that was instantiated in the beginning, before the {{metadata.max.age.ms}} from the instantiation time, then the producer and consumer will fail.
 
 Kill the kafka master:
 ```bash
@@ -74,13 +75,14 @@ consumer_1         | %3|1484908517.313|FAIL|rdkafka#consumer-1| 4c71e483a7fc:909
 consumer_1         | %3|1484908517.313|ERROR|rdkafka#consumer-1| 4c71e483a7fc:9092/1001: Failed to resolve '4c71e483a7fc:9092': Name or service not known
 ```
 
-According to the kafka 0.10 documentation that should not happen. From the 
-https://kafka.apache.org/0100/documentation.html#producerconfigs
+According to the kafka 0.10 documentation:
 
-|  `bootstrap.servers:`  |
+|  `metadata.max.age.ms`:  |
 | ---------------------- |
-|  A list of host/port pairs to use for establishing the initial connection to the Kafka cluster. The client will make use of all servers irrespective of which servers are specified here for bootstrapping—this list only impacts the initial hosts used to discover the full set of servers. This list should be in the form `host1:port1,host2:port2`,.... **Since these servers are just used for the initial connection to discover the full cluster membership (which may change dynamically)**, this list need not contain the full set of servers (you may want more than one, though, in case a server is down).  |
+|  The period of time in milliseconds after which we force a refresh of metadata even if we haven't seen any partition leadership changes to proactively discover any new brokers or partitions.  |
 
+This issue was discussed here:
+https://github.com/confluentinc/confluent-kafka-python/issues/111
 
 ###Stop the services
 
