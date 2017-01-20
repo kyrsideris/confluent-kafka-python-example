@@ -51,8 +51,10 @@ example_zookeeper_1         /docker-entrypoint.sh zkSe ...   Up       0.0.0.0:21
 
 
 ###Gotcha
-The python kafka client will not get the updated list immediately of brokers as the kafka clients are scaling up. The update rate of the broker list depends on the {{metadata.max.age.ms}} period on 0.10 and {{topic.metadata.refresh.interval.ms}} on 0.8.
-So if we kill the master kafka container that was instantiated in the beginning, before the {{metadata.max.age.ms}} from the instantiation time, then the producer and consumer will fail.
+The python kafka client will not get the updated list immediately of brokers as the kafka clients are scaling up. The update rate of the broker list depends on the metadata refresh interval {{metadata.max.age.ms}} or {{topic.metadata.refresh.interval.ms}}.
+So if we kill the master kafka container that was instantiated in the beginning before the metadata refresh interval, from the instantiation time, then the producer and consumer will fail.
+
+Check the configuration properties: https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md
 
 Kill the kafka master:
 ```bash
@@ -75,11 +77,12 @@ consumer_1         | %3|1484908517.313|FAIL|rdkafka#consumer-1| 4c71e483a7fc:909
 consumer_1         | %3|1484908517.313|ERROR|rdkafka#consumer-1| 4c71e483a7fc:9092/1001: Failed to resolve '4c71e483a7fc:9092': Name or service not known
 ```
 
-According to the kafka 0.10 documentation:
+According to the `librdkafka` configuration documentation:
+https://github.com/edenhill/librdkafka/blob/master/CONFIGURATION.md
 
-|  `metadata.max.age.ms`:  |
-| ---------------------- |
-|  The period of time in milliseconds after which we force a refresh of metadata even if we haven't seen any partition leadership changes to proactively discover any new brokers or partitions.  |
+|  `metadata.max.age.ms`:  | `topic.metadata.refresh.interval.ms`: |
+|:---------------------- |:---------------------- |
+|  Metadata cache max age. Defaults to metadata.refresh.interval.ms * 3. Type: integer | Topic metadata refresh interval in milliseconds. The metadata is automatically refreshed on error and connect. Use -1 to disable the intervalled refresh. Type: integer |
 
 This issue was discussed here:
 https://github.com/confluentinc/confluent-kafka-python/issues/111
